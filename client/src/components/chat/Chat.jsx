@@ -8,9 +8,9 @@ import ChatMessages from "./ChatMessages";
 import ChatWelcome from "./ChatWelcome";
 import { format } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
-import { io } from "socket.io-client";
+//import { io } from "socket.io-client";
 
-const socket = io('http://localhost:5000')
+//const socket = io('http://localhost:5000')
 
 const DATE_FORMAT = "dd/MM/yyyy HH:mm";
 
