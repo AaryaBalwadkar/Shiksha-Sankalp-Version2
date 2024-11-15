@@ -2,7 +2,9 @@ import { create } from "zustand";
 import axios from "axios";
 import { useAuthContext } from "@/context/AuthContext";
 
-const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/auth" : "/api/auth";
+const API_URL = import.meta.env.MODE === "development" 
+  ? "http://localhost:5000/api/auth" 
+  : "https://shiksha-sankalp.onrender.com/api/auth";
 const API_URL2 = import.meta.env.MODE === "development" ? "http://localhost:5000/api/classroom" : "/api/classroom";
 axios.defaults.withCredentials = true;
 

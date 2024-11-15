@@ -8,6 +8,10 @@ import axios from "axios";
 import { ClassroomNavigationItem } from './ClassroomNavigationBar';
 import Logout from "./Logout";
 
+const API_URL = import.meta.env.MODE === "development" 
+  ? "http://localhost:5000/api/classroom" 
+  : "https://shiksha-sankalp.onrender.com/api/classroom";
+  
 const Classrooms = () => {
   const [classrooms, setClassrooms] = useState([])
 
@@ -15,7 +19,7 @@ const Classrooms = () => {
     const getClassrooms = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/classroom/classrooms"
+          `${API_URL}/classrooms`
         );
         setClassrooms(res.data);
       } catch (error) {

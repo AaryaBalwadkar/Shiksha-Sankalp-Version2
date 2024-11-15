@@ -1,7 +1,7 @@
 import path from 'path'
 import express from 'express'
 import dotenv from 'dotenv'
-// import cors from 'cors'
+import cors from 'cors'
 import AuthRoutes from './routes/AuthRoutes.js'
 import MessageRoutes from './routes/MessageRoutes.js'
 import UserRoutes from './routes/UserRoutes.js'
@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 5000
 
 const __dirname = path.resolve();
 
-// app.use(cors({ origin: ["http://localhost:5173","https://shiksha-sankalp.onrender.com"], credentials: true }))
+app.use(cors({ origin: ["http://localhost:5173","https://shiksha-sankalp.onrender.com"], credentials: true }))
 
 app.use(express.json())
 app.use(cookieParser())
