@@ -16,12 +16,13 @@ import ConfirmRemove from "./pages/pagesForEditables/confirmRemove/ConfirmRemove
 import LandingPage from "./pages/website/LandingPage.jsx";
 
 const App = () => {
-  const { isCheckingAuth, checkAuth, isAuthenticated, user } = useAuthStore();
+  const { isCheckingAuth, checkAuth, isAuthenticated, user, onlineUsers } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
+  console.log({onlineUsers});
   // console.log("isAuthenticated : ", isAuthenticated);
   // console.log("user : ", user);
   return (

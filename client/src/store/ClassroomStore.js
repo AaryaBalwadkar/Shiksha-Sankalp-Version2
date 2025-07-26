@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
+import { useAuthStore } from "./AuthStore";
 
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/classroom" : "/api/classroom";
 const storeType_options = [
@@ -13,8 +14,9 @@ export const useClassroom = create((set) => ({
 	setSelectedClassroom: (selectedClassroom) => set({ selectedClassroom }),
 }));
 
-export const useClassroomAndChannelStore = create((set) => ({
+export const useClassroomAndChannelStore = create((set, get) => ({
 	user: null,
+	channels: [],
 
 	addClassroom: async (classroomName, image) => {
 		try {
@@ -66,9 +68,18 @@ export const useClassroomAndChannelStore = create((set) => ({
 			throw error;
 		}
 	},
-	deleteChannel: async (classroomId) => {
+	getChannels: async (classroomId) => {
+		try{
+			const response = await axios.get(`${API_URL}/${classroomId}`);
+			set({ channels: response.data[0] });
+		} catch (error) {
+			set({ error: error.response.data.message || "Error in fetching channels", isLoading: false });
+			throw error;
+		}
+	},
+	deleteChannel: async (channelId) => {
 		try {
-			const response = await axios.post(`${API_URL}/deletechannel`, { classroomId });
+			const response = await axios.post(`${API_URL}/deletechannel`, { channelId });
       		console.log(response)
 
 		} catch (error) {
@@ -86,4 +97,31 @@ export const useClassroomAndChannelStore = create((set) => ({
 			throw error;
 		}
 	},
+	subscribeToChannel: (classroomId) => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket || !classroomId) return;
+
+    // Define the handler function for the 'newChannel' event
+    const newChannelHandler = (newChannel) => {
+      set((state) => {
+        // Avoid adding duplicate channels
+        if (!state.channels.some((channel) => channel._id === newChannel._id)) {
+          return { channels: [...state.channels, newChannel] };
+        }
+        return state;
+      });
+    };
+	
+    socket.off("newChannel", newChannelHandler);
+    socket.on("newChannel", newChannelHandler);
+    socket.emit("joinClassroom", classroomId);
+  },
+
+  unsubscribeFromChannel: (classroomId) => {
+    const socket = useAuthStore.getState().socket;
+    if (!socket || !classroomId) return;
+
+    socket.off("newChannel");
+    socket.emit("leaveClassroom", classroomId);
+  },
 }));

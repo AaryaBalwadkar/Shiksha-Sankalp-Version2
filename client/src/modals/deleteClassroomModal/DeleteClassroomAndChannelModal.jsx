@@ -7,16 +7,27 @@ import { useLocation } from "react-router-dom";
 const DeleteClassroomModal = () => {
   const location = useLocation()
   const id = location.state?.id;
+  const value = location.state?.value;
   const [code, setCode] = useState("");
 
-  const { deleteClassroom } = useClassroomAndChannelStore();
+  const { deleteClassroom, deleteChannel } = useClassroomAndChannelStore();
   const navigate = useNavigate();
 
   const handleDelete = async (e) => {
     e.preventDefault()
     try {
-      await deleteClassroom(id)
-      navigate('/home')
+      if (value === "channel") {
+        await deleteChannel(id);
+        navigate(`/home/${location.state?.classroomId}`);
+        return;
+      } else if (value === "classroom") {
+        if (!code) {
+          alert("Please enter the classroom code to confirm deletion.");
+          return;
+        }
+        await deleteClassroom(id, code);
+        navigate("/classroom");
+      }
     } catch (error) {
       console.log("Error in handling delete classroom")
     }

@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Hash, Lock, Trash2 } from 'lucide-react';
-import useConversation from '@/store/ConversationsStore';
+import useConversationStore from '@/store/ConversationsStore';
 import { useAuthStore } from '@/store/AuthStore';
 import { useClassroomAndChannelStore } from '@/store/ClassroomStore';
 
 const ChannelNavigationItem = ({ classroomId, channelId, channelName, lock }) => {
-    const { selectedConversation, setSelectedConversation } = useConversation();
+    const { selectedConversation, setSelectedConversation } = useConversationStore();
     const isSelected = selectedConversation === channelId;
 
     const navigate = useNavigate();
@@ -20,7 +20,7 @@ const ChannelNavigationItem = ({ classroomId, channelId, channelName, lock }) =>
 
     const handleDeleteChannel = async () => {
         try {
-            navigate('/home/confirmdeletion', { state: { id: channelId } })
+            navigate('/home/confirmdeletion', { state: { value: "channel", id: channelId, classroomId } })
         } catch (error) {
             console.log("Something went wrong in deleting channel")
         }

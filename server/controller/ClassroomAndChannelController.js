@@ -5,6 +5,7 @@ import Message from "../model/Message.js";
 import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
 import conversation from "../model/Conversation.js";
+import { io } from "../lib/socket.js";
 
 export const createClassroom = async (req, res) => {
 	const {classroomName, image} = req.body
@@ -127,53 +128,61 @@ export const joinClassroom = async (req, res) => {
 }
 
 export const createChannel = async (req, res) => {
-	const { classroomId, channelName, lock } = req.body
-	const user = req.user._id
+  const { classroomId, channelName, lock } = req.body;
+  const user = req.user._id;
 
-	try {
-		if (!channelName || !classroomId) {
-			throw new Error("Classroom Id and Channel name are required.");
-		}
+  try {
+    if (!channelName || !classroomId) {
+      throw new Error("Classroom ID and channel name are required.");
+    }
 
-		const classrooms = await classroom.findById(classroomId);
-		console.log("classrooms: ", classrooms)
+    // Validate classroom existence
+    const classroomData = await classroom.findById(classroomId);
+    if (!classroomData) {
+      return res.status(404).json({ error: "Classroom not found." });
+    }
 
-		if (classrooms.length === 0) {
-			return res.status(404).json({ error: "No classrooms found." });
-		}
+    // Check if user is a participant
+    const isParticipant = classroomData.participants.includes(user);
+    if (!isParticipant) {
+      return res.status(403).json({ error: "User is not a participant in this classroom." });
+    }
 
-		const matchingClassroom = classrooms.participants.includes(user)
+    // Check if channel already exists
+    const channelAlreadyExists = await channel.findOne({ classroomName: classroomId, channelName });
+    if (channelAlreadyExists) {
+      return res.status(400).json({ message: "Channel already exists" });
+    }
 
-		if (!matchingClassroom) {
-			return res.status(404).json({ error: "User is not a participant in any matching classroom." });
-		}
+    // Create and save the new channel
+    const newChannel = new channel({
+      classroomName: classroomId,
+      channelName,
+      lock: lock || false,
+    });
 
-		const channelAlreadyExists = await channel.findOne({ classroomName: classroomId, channelName });
+    await newChannel.save();
 
-		if (channelAlreadyExists) {
-			return res.status(400).json({ message: "Channel already exists" });
-		}
+    // Emit the newChannel event to all clients in the classroom room
+    io.to(classroomId).emit("newChannel", {
+      _id: newChannel._id,
+      classroomName: newChannel.classroomName,
+      channelName: newChannel.channelName,
+      lock: newChannel.lock,
+    });
+    console.log(`Emitted newChannel event for classroom ${classroomId}:`, newChannel);
 
-		const newChannel = new channel({
-			classroomName: classroomId,
-			channelName,
-			lock,
-		});
-
-		await newChannel.save();
-
-		res.status(201).json({
-			message: "Classroom created successfully",
-			newChannel: {
-				...newChannel._doc,
-			},
-		});
-
-	} catch (error) {
-		console.log("Error in CreateChannelController: ", error.message)
-		res.status(500).json({ error: "Internal server error" })
-	}
-}
+    res.status(201).json({
+      message: "Channel created successfully",
+      newChannel: {
+        ...newChannel._doc,
+      },
+    });
+  } catch (error) {
+    console.log("Error in createChannel controller:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export const getClassroomCode = async (req, res) => {
 	const { classroomId } = req.body
@@ -274,20 +283,17 @@ export const deleteChannel = async (req, res) => {
 		if (!channelId) {
 			throw new Error("Classroom Id is required");
 		}
-		const findChannel = await channel.findById(channelId)
-
-		if(findChannel.channelName == "Announcement")
-		console.log(findChannel)
-
 		// const findChannel = await channel.findById(channelId)
 
-		// const updateMessageModel = await Message.deleteMany({ receiverId: { $in: findChannel } });
-
+		// if(findChannel.channelName == "Announcement")
+		
+		const findChannel = await channel.findById(channelId)
+		
+		const updateMessageModel = await Message.deleteMany({ receiverId: { $in: findChannel } });
 		// const updateConversationModel = await conversation.deleteMany({ channelId: { $in: findChannel } });
+		const updateChannelModel = await channel.deleteMany({ _id: { $in: channelId } });
 
-		// const updateChannelModel = await channel.deleteMany({ _id: { $in: channelId } });
-
-		// res.status(200).json("Done")
+		res.status(200).json("Done")
 
 	} catch (error) {
 		console.log("Error in DeleteClassroomController: ", error.message)

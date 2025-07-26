@@ -1,7 +1,6 @@
 import React from "react";
 import './Channel.css'
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ChannelNavigationItem from "./ChannelNavigationItem";
 import ChannelHeader from "./ChannelHeader";
@@ -10,25 +9,18 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useClassroomAndChannelStore } from "@/store/ClassroomStore";
 
 const Channel = () => {
-  const { id } = useParams(); // Get classroom ID from route params
-  const [channels, setChannels] = useState([]);
-  const [classroomCode, setClassroomCode] = useState([])
+  const { id, channelId } = useParams(); // Get classroom ID from route params
+  const { getChannels, channels, subscribeToChannel, unsubscribeFromChannel } = useClassroomAndChannelStore();
 
   useEffect(() => {
-    const getChannels = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/classroom/${id}`
-        );
-        setChannels(res.data[0]);
-        setClassroomCode(res.data[1]);
-      } catch (error) {
-        console.log("Something went wrong:", error.message);
-      }
-    };
+    getChannels(id);
 
-    getChannels();
-  }, [id]);
+    subscribeToChannel(id);
+
+    return () => {
+      unsubscribeFromChannel(id); // Unsubscribe from the channel when component unmounts
+    };
+  }, [id, getChannels, subscribeToChannel, unsubscribeFromChannel]);
 
   return (
     <div>
@@ -38,7 +30,7 @@ const Channel = () => {
         )}
         {id && (
           <>
-            <ChannelHeader classroomId={id} code={classroomCode}/>
+            <ChannelHeader classroomId={id} code={channels.classroomCode}/>
           </>
         )}
         <ScrollArea className="h-[80vh]">

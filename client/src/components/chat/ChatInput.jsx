@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Plus, Smile } from "lucide-react";
 import axios from "axios"; // Ensure axios is imported
-import { useConversationStore } from "@/store/ConversationsStore";
+import useConversationStore from "@/store/ConversationsStore"; // Adjust the import path as necessary
 
 const ChatInput = ({ name, channelid }) => {
   const [message, setMessage] = useState("");

@@ -8,11 +8,11 @@ import UserRoutes from './routes/UserRoutes.js'
 import ClassroomAndChannelRoutes from './routes/ClassroomAndChennelRoutes.js'
 import mongoose from 'mongoose'
 import cookieParser from 'cookie-parser'
-//import { app, server } from './socket.js'
+import { app, server } from './lib/socket.js'
 
 dotenv.config()
 
-const app = express()
+// const app = express()
 const PORT = process.env.PORT || 5000
 
 const __dirname = path.resolve();
@@ -33,7 +33,7 @@ app.get("*", (req,res) => {
     res.sendFile(path.join(__dirname,"client","dist","index.html"))
 })
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log("Server is running on port", PORT)
 })
 
