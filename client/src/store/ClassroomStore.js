@@ -87,11 +87,11 @@ export const useClassroomAndChannelStore = create((set, get) => ({
 			throw error;
 		}
 	},
-	classroomCode: async (classroomId) => {
+	getClassroomCode: async (classroomId) => {
 		try {
-			const response = await axios.get(`${API_URL}/classroomcode`, { classroomId });
-      		console.log(response)
-
+			const response = await axios.get(`${API_URL}/classroomcode`, { params: { classroomId } });
+			console.log(response.data);
+			return response.data;
 		} catch (error) {
 			set({ error: error.response.data.message || "Error in joining classroom", isLoading: false });
 			throw error;

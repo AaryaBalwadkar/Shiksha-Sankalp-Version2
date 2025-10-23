@@ -6,6 +6,7 @@ import AuthRoutes from './routes/AuthRoutes.js'
 import MessageRoutes from './routes/MessageRoutes.js'
 import UserRoutes from './routes/UserRoutes.js'
 import ClassroomAndChannelRoutes from './routes/ClassroomAndChennelRoutes.js'
+import AssignmentRoutes from './routes/AssignmentRoutes.js'
 import mongoose from 'mongoose'
 import cookieParser from 'cookie-parser'
 import { app, server } from './lib/socket.js'
@@ -26,12 +27,13 @@ app.use("/api/auth", AuthRoutes)
 app.use("/api/messages", MessageRoutes)
 app.use("/api/user", UserRoutes)
 app.use("/api/classroom", ClassroomAndChannelRoutes)
+app.use("/api/assignments", AssignmentRoutes)
 
-app.use(express.static(path.join(__dirname, "/client/dist")))
+// app.use(express.static(path.join(__dirname, "/client/dist")))
 
-app.get("*", (req,res) => {
-    res.sendFile(path.join(__dirname,"client","dist","index.html"))
-})
+// app.get("*", (req,res) => {
+//     res.sendFile(path.join(__dirname,"client","dist","index.html"))
+// })
 
 server.listen(PORT, () => {
     console.log("Server is running on port", PORT)

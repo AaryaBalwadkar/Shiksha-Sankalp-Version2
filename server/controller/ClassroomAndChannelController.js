@@ -8,67 +8,64 @@ import conversation from "../model/Conversation.js";
 import { io } from "../lib/socket.js";
 
 export const createClassroom = async (req, res) => {
-	const {classroomName, image} = req.body
-    const whoCreated = req.user._id
+	const { classroomName, image } = req.body;
+	const whoCreated = req.user._id;
 
 	const classroomCode = Math.floor(100000 + Math.random() * 900000).toString();
-	
-    try {
-        if (!classroomName) {
+
+	try {
+		if (!classroomName) {
 			throw new Error("Classroom name is required");
 		}
 		if (!image) {
 			throw new Error("Classroom Image is required");
 		}
 
-		const userClassroomNames = await User.findOne({
-			_id: whoCreated,
-		}).populate("classrooms"); // NOT REFERENCE BUT ACTUAL MESSAGES
-		const names = userClassroomNames.classrooms.map((classroom) => (classroom.classroomName));
-		
-		const isClassroomAlreadyExists = names.includes(classroomName)
-		if(isClassroomAlreadyExists){
-			console.log("classroomAlreadyExists", isClassroomAlreadyExists);
-			return res.status(400).json({message: "Classroom already exists" });
+		// Check for duplicate classroom names
+		const userClassroomNames = await User.findOne({ _id: whoCreated }).populate("classrooms");
+		const names = userClassroomNames.classrooms.map((c) => c.classroomName);
+		if (names.includes(classroomName)) {
+			return res.status(400).json({ message: "Classroom already exists" });
 		}
 
-        const newClassroom = new classroom({
-            whoCreated,
+		// Create new classroom
+		const newClassroom = new classroom({
+			whoCreated,
 			classroomName,
 			classroomCode,
 			imageUrl: image,
-			participants: whoCreated
+			participants: whoCreated,
 		});
-		
 		await newClassroom.save();
 
-		const newid = newClassroom._id
-		const updateUser = await User.findByIdAndUpdate(
-			whoCreated,
-			{$push: {classrooms: newid}}
-		)
-
-		const channelName = "Announcements"
-		const newChannel = new channel({
-			classroomName: newid,
-			lock: false,
-			channelName,
+		// Link classroom to the user
+		await User.findByIdAndUpdate(whoCreated, {
+			$push: { classrooms: newClassroom._id },
 		});
 
-        await newChannel.save();
+		// Create default channels: Announcements and Assignments
+		const defaultChannels = ["Announcements", "Assignments"];
+		await Promise.all(
+			defaultChannels.map((name) =>
+				new channel({
+					classroomName: newClassroom._id,
+					lock: false,
+					channelName: name,
+				}).save()
+			)
+		);
 
-        res.status(201).json({
+		res.status(201).json({
 			message: "Classroom created successfully",
 			newClassroom: {
 				...newClassroom._doc,
 			},
 		});
-
-    } catch (error) {
-        console.log("Error in CreateClassroomController: ", error.message)
-        res.status(500).json({ error: "Internal server error"})
-    }
-}
+	} catch (error) {
+		console.error("Error in CreateClassroomController:", error.message);
+		res.status(500).json({ error: "Internal server error" });
+	}
+};
 
 export const joinClassroom = async (req, res) => {
 	const { code } = req.body
@@ -185,11 +182,10 @@ export const createChannel = async (req, res) => {
 };
 
 export const getClassroomCode = async (req, res) => {
-	const { classroomId } = req.body
+	const { classroomId } = req.query
 	try {
 		const c = await classroom.findById(classroomId);
-		console.log(c.classroomCode)
-		res.status(200).json(names);
+		res.status(200).json(c.classroomCode);
 	} catch (error) {
 		console.log("Error in getClassroomCode controller: ", error.message);
 		res.status(500).json({ error: "Internal server error" });

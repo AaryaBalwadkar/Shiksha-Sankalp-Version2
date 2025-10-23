@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Hash, Lock, Trash2 } from 'lucide-react';
+import { Hash, Lock, Megaphone, NotebookPen, Trash2 } from 'lucide-react';
 import useConversationStore from '@/store/ConversationsStore';
 import { useAuthStore } from '@/store/AuthStore';
 import { useClassroomAndChannelStore } from '@/store/ClassroomStore';
@@ -41,13 +41,17 @@ const ChannelNavigationItem = ({ classroomId, channelId, channelName, lock }) =>
             >
                 {lock ? (
                     <Lock className="flex-shrink-0 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
+                ) : channelName === 'Announcements' ? (
+                    <Megaphone className="flex-shrink-0 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
+                ) : channelName === 'Assignments' ? (
+                    <NotebookPen className="flex-shrink-0 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                 ) : (
                     <Hash className="flex-shrink-0 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                 )}
                 {channelName}
             </button>
 
-            {user?.status !== "student" && channelName !== "Announcements" && (
+            {user?.status !== "student" && channelName !== "Announcements" && channelName !== "Assignments" && (
                 <button
                     onClick={handleDeleteChannel}
                     className="flex items-center justify-center h-[100%] w-[10%] text-zinc-500"

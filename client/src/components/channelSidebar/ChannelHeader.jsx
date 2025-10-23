@@ -3,8 +3,7 @@ import { cn } from '@/lib/utils'
 import { Trash, Code } from 'lucide-react'
 import { Presentation } from 'lucide-react'
 import { useAuthStore } from '@/store/AuthStore'
-import { useNavigate, useParams } from 'react-router-dom'
-import { useClassroomAndChannelStore } from '@/store/ClassroomStore'
+import { useNavigate } from 'react-router-dom'
 import { ActionTooltip } from '@/actions/TooltipAction'
 
 const ChannelHeader = ({ classroomId, code }) => {
@@ -38,13 +37,13 @@ const ChannelHeader = ({ classroomId, code }) => {
             </div>
           </ActionTooltip>
           <ActionTooltip side="right" align="center" label="Delete Classroom">
-            <div className='flex h-[100%] w-[33%] items-center justify-center border-r-blue-200 border-r-2' onClick={handleDelete}>
-              <Trash />
+            <div className='flex w-[33%] justify-center'>
+              <Presentation />
             </div>
           </ActionTooltip>
           <ActionTooltip side="right" align="center" label="Whiteboard">
-            <div className='flex w-[33%] justify-center' onClick={handleDelete}>
-              <Presentation />
+            <div className='flex h-[100%] w-[33%] items-center justify-center border-r-blue-200 border-r-2' onClick={handleDelete}>
+              <Trash />
             </div>
           </ActionTooltip>
         </div>

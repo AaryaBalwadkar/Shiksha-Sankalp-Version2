@@ -6,11 +6,6 @@ import EmailVerification from "./pages/emailVerification/EmailVerification.jsx";
 
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useAuthStore } from "./store/AuthStore.js";
-import AddClassroom from "./pages/pagesForEditables/addClassroom/AddClassroom.jsx";
-import AddChannelModal from "./modals/addChannelModal/AddChannelModal.jsx";
-import AddChannel from "./pages/pagesForEditables/addChannel/AddChannel.jsx";
-import AddClassroomModal from "./modals/addClassroomModal/AddClassroomModal.jsx";
-import JoinClassroom from "./pages/pagesForEditables/JoinClassroom/JoinClassroom.jsx";
 import ConfirmDelete from "./pages/pagesForEditables/confirmDelete/ConfirmDelete.jsx";
 import ConfirmRemove from "./pages/pagesForEditables/confirmRemove/ConfirmRemove.jsx";
 import LandingPage from "./pages/website/LandingPage.jsx";
@@ -45,26 +40,6 @@ const App = () => {
             element={isAuthenticated ? <Navigate to="/home" /> : <Signup />}
           />
           <Route path="/email-verification" element={<EmailVerification />} />
-
-          {/* Protected Route for Adding Classroom */}
-          <Route
-            path="/home/addclassroom"
-            element={
-              isAuthenticated ? <AddClassroom /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/home/addchannel"
-            element={
-              isAuthenticated ? <AddChannel /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/home/joinclassroom"
-            element={
-              isAuthenticated ? <JoinClassroom /> : <Navigate to="/login" />
-            }
-          />
           <Route path="/home/confirmdeletion" element={<ConfirmDelete />}/>
           <Route path="/home/confirmremove" element={<ConfirmRemove />}/>
           <Route path="/email-verification" element={<EmailVerification />} />

@@ -1,12 +1,11 @@
 import React from 'react'
 import './Navbar.css'
-import logo from '../assets/logo.png'
 
 const Navbar = () => {
   return (
     <nav class="navbar_container">
       <a className="logo" href="#">
-        <img src={logo} alt="IE"></img>
+        <a className='logo-text'>Shiksha Sankalp</a>
       </a>
       
       <ul class="navbar">

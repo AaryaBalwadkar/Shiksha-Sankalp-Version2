@@ -1,27 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ActionTooltip } from '@/actions/TooltipAction'
 import { Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/AuthStore'
+import JoinClassroomModal from '@/modals/JoinClassroomModal'
+import AddClassroomModal from '@/modals/AddClassroomModal'
 
 const ClassroomsAction = () => {
-  const navigate = useNavigate()
+  const [openJoinClassroomModal, setOpenJoinClassroomModal] = useState(false);
+  const [openAddClassroomModal, setOpenAddClassroomModal] = useState(false);
   const { user } = useAuthStore()
 
-  const handlePlusAddClassroom = () => {
-    navigate(`/home/addClassroom`);
-  }
-  const handlePlusJoinClassroom = () => {
-    navigate(`/home/joinClassroom`);
-  }
-  
   return (
     <div>
       {(user?.status === "institute") && (
         <ActionTooltip side="right" align="center" label="Add new classroom">
-          <button 
+          <button
             className="group flex items-center mt-3"
-            onClick={handlePlusAddClassroom}>
+            onClick={() => setOpenAddClassroomModal(true)}
+          >
             <div className="flex mx-3 h-[45px] w-[45px] rounded-[22.5px] group-hover:rounded-[16px]  transition-all overflow-hidden items-center justify-center bg-background dark:bg-neutral-700 group-hover:bg-pink-500">
               <Plus
                 className="group-hover:text-white transition text-pink-500"
@@ -34,9 +31,9 @@ const ClassroomsAction = () => {
       {(user?.status === "educator") && (
         <ActionTooltip side="right" align="center" label="Join Classroom">
           <button className="group flex items-center mt-3">
-            <div 
+            <div
               className="flex mx-3 h-[45px] w-[45px] rounded-[22.5px] group-hover:rounded-[16px]  transition-all overflow-hidden items-center justify-center bg-background dark:bg-neutral-700 group-hover:bg-green-500"
-              onClick={handlePlusJoinClassroom}>
+              onClick={() => setOpenAddClassroomModal(true)}>
               <Plus
                 className="group-hover:text-white transition text-green-500"
                 size={25}
@@ -48,9 +45,9 @@ const ClassroomsAction = () => {
       {(user?.status === "student") && (
         <ActionTooltip side="right" align="center" label="Join Classroom">
           <button className="group flex items-center mt-3">
-            <div 
+            <div
               className="flex mx-3 h-[45px] w-[45px] rounded-[22.5px] group-hover:rounded-[16px]  transition-all overflow-hidden items-center justify-center bg-background dark:bg-neutral-700 group-hover:bg-orange-500"
-              onClick={handlePlusJoinClassroom}>
+              onClick={() => setOpenJoinClassroomModal(true)}>
               <Plus
                 className="group-hover:text-white transition text-orange-500"
                 size={25}
@@ -58,6 +55,12 @@ const ClassroomsAction = () => {
             </div>
           </button>
         </ActionTooltip>
+      )}
+      {openJoinClassroomModal && (
+        <JoinClassroomModal onClose={() => setOpenJoinClassroomModal(false)} />
+      )}
+      {openAddClassroomModal && (
+        <AddClassroomModal onClose={() => setOpenAddClassroomModal(false)} />
       )}
     </div>
   )
