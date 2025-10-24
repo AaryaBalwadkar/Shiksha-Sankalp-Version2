@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useClassroomAndChannelStore } from "../store/ClassroomStore";
 
-const DeleteClassroomModal = ({ value = "classroom", id, onClose }) => {
+const DeleteClassroomAndChannelModal = ({ value, id, onClose }) => {
   const { deleteClassroom, deleteChannel } = useClassroomAndChannelStore();
-  const navigate = useNavigate();
   const [error, setError] = useState("");
 
   const handleDelete = async (e) => {
@@ -20,11 +18,9 @@ const DeleteClassroomModal = ({ value = "classroom", id, onClose }) => {
       if (value === "channel") {
         await deleteChannel(id);
         onClose();
-        navigate(`/home/${id}`); // Using id as classroomId for channels
       } else if (value === "classroom") {
         await deleteClassroom(id);
         onClose();
-        navigate("/home");
       }
     } catch (err) {
       console.error("Error deleting:", err);
@@ -78,4 +74,4 @@ const DeleteClassroomModal = ({ value = "classroom", id, onClose }) => {
   );
 };
 
-export default DeleteClassroomModal;
+export default DeleteClassroomAndChannelModal;

@@ -4,7 +4,7 @@ import { Presentation } from 'lucide-react'
 import { useAuthStore } from '@/store/AuthStore'
 import { useNavigate } from 'react-router-dom'
 import { ActionTooltip } from '@/actions/TooltipAction'
-import DeleteClassroomModal from '@/modals/DeleteClassroomAndChannelModal'
+import DeleteClassroomAndChannelModal from '@/modals/DeleteClassroomAndChannelModal'
 
 const ChannelHeader = ({ classroomId, code }) => {
   const { user } = useAuthStore()
@@ -26,7 +26,7 @@ const ChannelHeader = ({ classroomId, code }) => {
   return (
     <div>
       {showDeleteModal && (
-        <DeleteClassroomModal
+        <DeleteClassroomAndChannelModal
           value="classroom"
           id={classroomId}
           onClose={() => setShowDeleteModal(false)}

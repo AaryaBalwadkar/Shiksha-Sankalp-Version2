@@ -40,8 +40,6 @@ const App = () => {
             element={isAuthenticated ? <Navigate to="/home" /> : <Signup />}
           />
           <Route path="/email-verification" element={<EmailVerification />} />
-          <Route path="/home/confirmdeletion" element={<ConfirmDelete />}/>
-          <Route path="/home/confirmremove" element={<ConfirmRemove />}/>
           <Route path="/email-verification" element={<EmailVerification />} />
           <Route path="/home/:id" element={<Home />} />
           <Route path="/home/:id/:channelName/:channelid" element={<Home />} />

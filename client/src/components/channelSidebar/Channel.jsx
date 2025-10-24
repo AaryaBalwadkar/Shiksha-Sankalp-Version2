@@ -8,14 +8,14 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useClassroomAndChannelStore } from "@/store/ClassroomStore";
 
 const Channel = () => {
-  const { id, channelId } = useParams(); // Get classroom ID and channel ID from URL
+  const { id, channelId } = useParams();
   const [classroomCode, setClassroomCode] = useState(null);
 
   const {
     getChannels,
     getClassroomCode,
     channels = [],
-    subscribeToChannel,
+    subscribeToAllChannelEvents,
     unsubscribeFromChannel
   } = useClassroomAndChannelStore();
 
@@ -23,18 +23,18 @@ const Channel = () => {
     if (!id) return;
 
     const fetchData = async () => {
-      await getChannels(id); // Fetch channels
-      const code = await getClassroomCode(id); // Fetch classroom code
-      setClassroomCode(code); // Set classroom code
-      subscribeToChannel(id); // Subscribe to real-time updates
+      await getChannels(id);
+      const code = await getClassroomCode(id);
+      setClassroomCode(code);
+      subscribeToAllChannelEvents(id);
     };
 
     fetchData();
 
     return () => {
-      unsubscribeFromChannel(id); // Clean up subscription
+      unsubscribeFromChannel(id);
     };
-  }, [id, getChannels, getClassroomCode, subscribeToChannel, unsubscribeFromChannel]);
+  }, [id, getChannels, getClassroomCode, subscribeToAllChannelEvents, unsubscribeFromChannel]);
 
   return (
     <div className="channel-side-bar">
