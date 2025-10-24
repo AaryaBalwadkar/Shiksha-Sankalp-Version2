@@ -26,8 +26,12 @@ io.on('connection', (socket) => {
 
     // Handle joining a classroom for channel updates
     socket.on('joinClassroom', (classroomId) => {
-        socket.join(`classroom:${classroomId}`);
-        console.log('Classroom joined:', classroomId);
+        const roomName = `classroom:${classroomId}`;
+        socket.join(roomName);
+        // Debug room membership
+        const roomMembers = io.sockets.adapter.rooms.get(roomName);
+        console.log('Room', roomName, 'has', roomMembers ? roomMembers.size : 0, 'members');
+        console.log('Socket', socket.id, 'is in rooms:', Array.from(socket.rooms));
     });
 
     // Handle leaving a classroom
@@ -52,8 +56,13 @@ io.on('connection', (socket) => {
         try {
             if (change.operationType === 'insert') {
                 const newChannel = change.fullDocument;
-                io.to(`classroom:${newChannel.classroomId}`).emit('newChannel', newChannel);
-                console.log('New channel emitted:', newChannel._id);
+                // Normalize the data to use consistent naming
+                // const normalizedChannel = {
+                //     ...newChannel,
+                //     classroomId: newChannel.classroomName // Map classroomName to classroomId
+                // };
+                // io.emit('newChannel', normalizedChannel);
+                io.to(`classroom:${newChannel.classroomName}`).emit('newChannel', newChannel);
             } 
             else if (change.operationType === 'delete') {
                 const deletedChannelId = change.documentKey._id;
@@ -61,7 +70,7 @@ io.on('connection', (socket) => {
                 console.log('Channel deleted:', deletedChannelId);
             }
             else if (change.operationType === 'update') {
-                const updatedChannel = await Channel.findById(change.documentKey._id);
+                const updatedChannel = await channel.findById(change.documentKey._id);
                 if (updatedChannel) {
                     io.to(`classroom:${updatedChannel.classroomId}`).emit('channelUpdated', updatedChannel);
                     console.log('Channel updated:', updatedChannel._id);

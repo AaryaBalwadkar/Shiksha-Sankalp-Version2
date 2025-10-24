@@ -75,31 +75,22 @@ export const useClassroomAndChannelStore = create((set, get) => ({
 		}
 	},
 	getChannels: async (classroomId) => {
-		try {
-			console.log('Fetching channels for classroom:', classroomId);
+		try{
 			const response = await axios.get(`${API_URL}/${classroomId}`);
+			// Add console log to debug the response
 			console.log('Channels response:', response.data);
 			
 			// Handle both array and single object responses
 			const channelsData = Array.isArray(response.data) ? response.data[0] : response.data;
 			if (!channelsData) {
 				console.error('No channels data received');
-				set({ channels: [] });
 				return;
 			}
 			
-			const formattedChannels = Array.isArray(channelsData) ? channelsData : [channelsData];
-			console.log('Setting channels:', formattedChannels);
-			set({ channels: formattedChannels });
-			
-			return formattedChannels;
+			set({ channels: Array.isArray(channelsData) ? channelsData : [channelsData] });
 		} catch (error) {
 			console.error('Error fetching channels:', error);
-			set({ 
-				channels: [],
-				error: error.response?.data?.message || "Error in fetching channels", 
-				isLoading: false 
-			});
+			set({ error: error.response?.data?.message || "Error in fetching channels", isLoading: false });
 			throw error;
 		}
 	},
@@ -129,66 +120,132 @@ export const useClassroomAndChannelStore = create((set, get) => ({
 			throw error;
 		}
 	},
-	subscribeToChannel: (classroomId) => {
-    const socket = useAuthStore.getState().socket;
-    if (!socket || !classroomId) return;
+	subscribeToNewChannels: (classroomId) => {
+		const socket = useAuthStore.getState().socket;
+		if (!socket || !classroomId) {
+			console.error("Cannot subscribe to new channels: socket or classroomId missing");
+			return;
+		}
 
-    const handlers = {
-      newChannel: (newChannel) => {
-        if (newChannel.classroomId === classroomId) {
-          set((state) => {
-            const channelExists = state.channels.some(
-              (channel) => channel._id === newChannel._id
-            );
-            if (!channelExists) {
-              return { channels: [...state.channels, newChannel] };
-            }
-            return state;
-          });
-        }
-      },
+		console.log("Subscribing to new channels for classroom:", classroomId);
 
-      channelDeleted: (deletedChannelId) => {
-        set((state) => ({
-          channels: state.channels.filter(
-            (channel) => channel._id !== deletedChannelId
-          ),
-        }));
-      },
+		const newChannelHandler = (newChannel) => {
+			console.log("Socket received new channel event:", newChannel);
+			
+			const channelClassroomName = newChannel.classroomName;
+			
+			// Convert IDs to strings for comparison
+			const currentId = String(classroomId);
+			const newChannelId = String(channelClassroomName);
+			
+			// Only proceed if the channel belongs to current classroom
+			if (currentId === newChannelId) {
+				set((state) => {
+					// Check if a channel with same name already exists in this classroom
+					const isDuplicate = state.channels.some(ch => 
+						ch.channelName === newChannel.channelName && 
+						String(ch.classroomName) === String(newChannel.classroomName)
+					);
+					
+					if (isDuplicate) {
+						console.log("Duplicate channel detected, ignoring:", newChannel.channelName);
+						return state;
+					}
+					
+					return {
+						channels: [...state.channels, newChannel]
+					};
+				});
+			} else {
+				console.log("Ignoring channel from different classroom");
+			}
+		};
 
-      channelUpdated: (updatedChannel) => {
-        if (updatedChannel.classroomId === classroomId) {
-          set((state) => ({
-            channels: state.channels.map((channel) =>
-              channel._id === updatedChannel._id ? updatedChannel : channel
-            ),
-          }));
-        }
-      },
-    };
+		socket.off('newChannel', newChannelHandler); // Remove any existing listeners
+		socket.on('newChannel', newChannelHandler);
+		
+		// Join the classroom room
+		socket.emit("joinClassroom", classroomId);
+	},
 
-    // Clean up and set up listeners
-    Object.entries(handlers).forEach(([event, handler]) => {
-      socket.off(event);
-      socket.on(event, handler);
-    });
+	subscribeToChannelDeletions: (classroomId) => {
+		const socket = useAuthStore.getState().socket;
+		if (!socket || !classroomId) {
+			console.error("Cannot subscribe to channel deletions: socket or classroomId missing");
+			return;
+		}
 
-    // Join classroom room
-    socket.emit("joinClassroom", classroomId);
+		console.log("Subscribing to channel deletions for classroom:", classroomId);
 
-    // Return cleanup function
-    return () => {
-      Object.keys(handlers).forEach((event) => {
-        socket.off(event);
-      });
-      socket.emit("leaveClassroom", classroomId);
-    };
-  },
+		const channelDeletedHandler = (deletedChannelId) => {
+			console.log("Channel deleted:", deletedChannelId);
+			set((state) => ({
+				channels: state.channels.filter(
+					(channel) => channel._id !== deletedChannelId
+				),
+			}));
+		};
 
-  unsubscribeFromChannel: (classroomId) => {
-    const socket = useAuthStore.getState().socket;
-    if (!socket || !classroomId) return;
+		// Clean up previous listener and set up new one
+		socket.off('channelDeleted', channelDeletedHandler);
+		socket.on('channelDeleted', channelDeletedHandler);
+	},
 
-    socket.emit("leaveClassroom", classroomId);
-  },
+	subscribeToChannelUpdates: (classroomId) => {
+		const socket = useAuthStore.getState().socket;
+		if (!socket || !classroomId) {
+			console.error("Cannot subscribe to channel updates: socket or classroomId missing");
+			return;
+		}
+
+		console.log("Subscribing to channel updates for classroom:", classroomId);
+
+		const channelUpdatedHandler = (updatedChannel) => {
+			if (updatedChannel.classroomId === classroomId) {
+				console.log("Channel updated:", updatedChannel);
+				set((state) => ({
+					channels: state.channels.map((channel) =>
+						channel._id === updatedChannel._id ? updatedChannel : channel
+					),
+				}));
+			}
+		};
+
+		// Clean up previous listener and set up new one
+		socket.off('channelUpdated', channelUpdatedHandler);
+		socket.on('channelUpdated', channelUpdatedHandler);
+	},
+
+	subscribeToAllChannelEvents: (classroomId) => {
+		const store = get();
+		if (!classroomId) {
+			console.error("Cannot subscribe to channel events: classroomId missing");
+			return;
+		}
+
+		const socket = useAuthStore.getState().socket;
+		console.log("Current socket state:", socket ? "Connected" : "Not connected");
+		console.log("Subscribing to all events for classroom:", classroomId);
+
+		// Subscribe to all channel-related events
+		store.subscribeToNewChannels(classroomId);
+		store.subscribeToChannelDeletions(classroomId);
+		store.subscribeToChannelUpdates(classroomId);
+	},
+
+	unsubscribeFromChannel: (classroomId) => {
+		const socket = useAuthStore.getState().socket;
+		if (!socket || !classroomId) {
+			console.error("Cannot unsubscribe from channel: socket or classroomId missing");
+			return;
+		}
+
+		console.log("Unsubscribing from all channel events for classroom:", classroomId);
+
+		// Remove all channel-related event listeners
+		socket.off('newChannel');
+		socket.off('channelDeleted');
+		socket.off('channelUpdated');
+		socket.emit("leaveClassroom", classroomId);
+	},
 }));

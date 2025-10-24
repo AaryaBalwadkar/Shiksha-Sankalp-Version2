@@ -3,9 +3,7 @@ import { channel } from "../model/Channel.js";
 import { User } from "../model/UserModel.js";
 import Message from "../model/Message.js";
 import { ObjectId } from "mongodb";
-import mongoose from "mongoose";
 import conversation from "../model/Conversation.js";
-import { io } from "../lib/socket.js";
 
 export const createClassroom = async (req, res) => {
 	const { classroomName, image } = req.body;
@@ -160,15 +158,6 @@ export const createChannel = async (req, res) => {
 
     await newChannel.save();
 
-    // Emit the newChannel event to all clients in the classroom room
-    io.to(classroomId).emit("newChannel", {
-      _id: newChannel._id,
-      classroomName: newChannel.classroomName,
-      channelName: newChannel.channelName,
-      lock: newChannel.lock,
-    });
-    console.log(`Emitted newChannel event for classroom ${classroomId}:`, newChannel);
-
     res.status(201).json({
       message: "Channel created successfully",
       newChannel: {
@@ -202,7 +191,6 @@ export const getClassrooms = async (req, res) => {
 		}).populate("classrooms"); // NOT REFERENCE BUT ACTUAL MESSAGES
 
 		if (!userClassroomNames) return res.status(200).json([]);
-		//console.log(userClassroomNames)
 
 		const names = userClassroomNames.classrooms.map((classroom) => (classroom));
 		res.status(200).json(names);

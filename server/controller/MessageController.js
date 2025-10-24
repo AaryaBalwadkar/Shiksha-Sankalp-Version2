@@ -1,17 +1,12 @@
 import Conversation from "../model/Conversation.js"
 import Message from "../model/Message.js"
 import { channel } from "../model/Channel.js"
-import { getReceiverSocketId } from "../lib/socket.js"
-// import { io } from "../socket.js"
 
 export const sendMessage = async (req, res) => {
     try {
         const { message } = req.body
-        // console.log("Message : ",message)
-        // console.log("channelName : ",channelName)
         const { id: receiverId } = req.params
         const senderId = req.user._id
-        // console.log(req.user._id)
 
         let conversation = await Conversation.findOne({ channelId: receiverId });
 
@@ -40,16 +35,8 @@ export const sendMessage = async (req, res) => {
             conversation.messages.push(newMessage._id)
         }
 
-        // await conversation.save()
-        // await newMessage.save()
-
         // This will run in parallel
         await Promise.all([conversation.save(), newMessage.save()])
-
-        // const receiverSocketId = getReceiverSocketId(receiverId);
-        // if(receiverSocketId){
-        //     io.to(receiverSocketId).emit('newMessage', newMessage);
-        // }
 
         res.status(201).json(newMessage)
     } catch (error) {
@@ -61,11 +48,8 @@ export const sendMessage = async (req, res) => {
 export const sendMessageInClassroom = async (req, res) => {
     try {
         const {message, channelName} = req.body
-        // console.log("Message : ",message)
-        // console.log("channelName : ",channelName)
         const {id: channelId} = req.params
         const senderId = req.user._id
-        // console.log(req.user._id)
 
         let conversation = await channel.findOne({
             channelName: channelName,
@@ -89,9 +73,6 @@ export const sendMessageInClassroom = async (req, res) => {
             conversation.messages.push(newMessage._id)
         }
 
-        // await conversation.save()
-        // await newMessage.save()
-
         // This will run in parallel
         await Promise.all([conversation.save(), newMessage.save()])
 
@@ -107,10 +88,9 @@ export const getMessages = async (req, res) => {
 		const { id: userToChatId } = req.params;
 		const senderId = req.user._id;
 
-        // const conversation = await Conversation.find({}).populate("messages")
 		const conversation = await Conversation.findOne({
 			channelId: userToChatId 
-        }).populate("messages"); // NOT REFERENCE BUT ACTUAL MESSAGES
+        }).populate("messages");
 
 		if (!conversation) return res.status(200).json([]);
 

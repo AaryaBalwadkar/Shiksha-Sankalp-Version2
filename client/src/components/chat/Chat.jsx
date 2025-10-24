@@ -24,7 +24,7 @@ const Chat = () => {
   useEffect(() => {
     getChats(channelid);
 
-    getAssignments(id, channelid);
+    // getAssignments(id, channelid);
 
     subscribeToMessages();
 
