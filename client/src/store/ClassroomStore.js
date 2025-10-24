@@ -31,10 +31,16 @@ export const useClassroomAndChannelStore = create((set, get) => ({
 	addChannel: async (classroomId, channelName, lock) => {
 		try {
 			const response = await axios.post(`${API_URL}/newchannel`, { classroomId, channelName, lock });
-      		console.log(response)
+      		console.log('Channel created:', response.data);
+			
+			// Update local state immediately
+			set((state) => ({
+				channels: [...state.channels, response.data]
+			}));
 
+			return response.data;
 		} catch (error) {
-			set({ error: error.response.data.message || "Error in creating channel", isLoading: false });
+			set({ error: error.response?.data?.message || "Error in creating channel", isLoading: false });
 			throw error;
 		}
 	},
@@ -54,7 +60,7 @@ export const useClassroomAndChannelStore = create((set, get) => ({
       		console.log(response)
 
 		} catch (error) {
-			set({ error: error.response.data.message || "Error in joining classroom", isLoading: false });
+			set({ error: error.response.data.message || "Error in deleting classroom", isLoading: false });
 			throw error;
 		}
 	},
@@ -64,26 +70,52 @@ export const useClassroomAndChannelStore = create((set, get) => ({
       		console.log(response)
 
 		} catch (error) {
-			set({ error: error.response.data.message || "Error in joining classroom", isLoading: false });
+			set({ error: error.response.data.message || "Error in removing classroom", isLoading: false });
 			throw error;
 		}
 	},
 	getChannels: async (classroomId) => {
-		try{
+		try {
+			console.log('Fetching channels for classroom:', classroomId);
 			const response = await axios.get(`${API_URL}/${classroomId}`);
-			set({ channels: response.data[0] });
+			console.log('Channels response:', response.data);
+			
+			// Handle both array and single object responses
+			const channelsData = Array.isArray(response.data) ? response.data[0] : response.data;
+			if (!channelsData) {
+				console.error('No channels data received');
+				set({ channels: [] });
+				return;
+			}
+			
+			const formattedChannels = Array.isArray(channelsData) ? channelsData : [channelsData];
+			console.log('Setting channels:', formattedChannels);
+			set({ channels: formattedChannels });
+			
+			return formattedChannels;
 		} catch (error) {
-			set({ error: error.response.data.message || "Error in fetching channels", isLoading: false });
+			console.error('Error fetching channels:', error);
+			set({ 
+				channels: [],
+				error: error.response?.data?.message || "Error in fetching channels", 
+				isLoading: false 
+			});
 			throw error;
 		}
 	},
 	deleteChannel: async (channelId) => {
 		try {
 			const response = await axios.post(`${API_URL}/deletechannel`, { channelId });
-      		console.log(response)
+      		console.log('Channel deleted:', channelId);
 
+			// Update local state immediately
+			set((state) => ({
+				channels: state.channels.filter(channel => channel._id !== channelId)
+			}));
+
+			return response.data;
 		} catch (error) {
-			set({ error: error.response.data.message || "Error in joining classroom", isLoading: false });
+			set({ error: error.response?.data?.message || "Error in deleting channel", isLoading: false });
 			throw error;
 		}
 	},
@@ -93,7 +125,7 @@ export const useClassroomAndChannelStore = create((set, get) => ({
 			console.log(response.data);
 			return response.data;
 		} catch (error) {
-			set({ error: error.response.data.message || "Error in joining classroom", isLoading: false });
+			set({ error: error.response.data.message || "Error in fetching classroom code", isLoading: false });
 			throw error;
 		}
 	},
@@ -101,27 +133,62 @@ export const useClassroomAndChannelStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     if (!socket || !classroomId) return;
 
-    // Define the handler function for the 'newChannel' event
-    const newChannelHandler = (newChannel) => {
-      set((state) => {
-        // Avoid adding duplicate channels
-        if (!state.channels.some((channel) => channel._id === newChannel._id)) {
-          return { channels: [...state.channels, newChannel] };
+    const handlers = {
+      newChannel: (newChannel) => {
+        if (newChannel.classroomId === classroomId) {
+          set((state) => {
+            const channelExists = state.channels.some(
+              (channel) => channel._id === newChannel._id
+            );
+            if (!channelExists) {
+              return { channels: [...state.channels, newChannel] };
+            }
+            return state;
+          });
         }
-        return state;
-      });
+      },
+
+      channelDeleted: (deletedChannelId) => {
+        set((state) => ({
+          channels: state.channels.filter(
+            (channel) => channel._id !== deletedChannelId
+          ),
+        }));
+      },
+
+      channelUpdated: (updatedChannel) => {
+        if (updatedChannel.classroomId === classroomId) {
+          set((state) => ({
+            channels: state.channels.map((channel) =>
+              channel._id === updatedChannel._id ? updatedChannel : channel
+            ),
+          }));
+        }
+      },
     };
-	
-    socket.off("newChannel", newChannelHandler);
-    socket.on("newChannel", newChannelHandler);
+
+    // Clean up and set up listeners
+    Object.entries(handlers).forEach(([event, handler]) => {
+      socket.off(event);
+      socket.on(event, handler);
+    });
+
+    // Join classroom room
     socket.emit("joinClassroom", classroomId);
+
+    // Return cleanup function
+    return () => {
+      Object.keys(handlers).forEach((event) => {
+        socket.off(event);
+      });
+      socket.emit("leaveClassroom", classroomId);
+    };
   },
 
   unsubscribeFromChannel: (classroomId) => {
     const socket = useAuthStore.getState().socket;
     if (!socket || !classroomId) return;
 
-    socket.off("newChannel");
     socket.emit("leaveClassroom", classroomId);
   },
 }));

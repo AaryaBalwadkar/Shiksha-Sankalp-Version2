@@ -8,10 +8,10 @@ const Navbar = () => {
         <a className='logo-text'>Shiksha Sankalp</a>
       </a>
       
-      <ul class="navbar">
+      {/* <ul class="navbar">
         <li><a>Home</a></li>
         <li><a>Contact</a></li>
-      </ul>
+      </ul> */}
 
       <div class="bx bx-menu" id="menu-icon"><i class="fa-solid fa-bars"></i></div>
     </nav>

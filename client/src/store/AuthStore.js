@@ -9,7 +9,9 @@ const API_URL = import.meta.env.MODE === "development"
 const API_URL2 = import.meta.env.MODE === "development" ? "http://localhost:5000/api/classroom" : "/api/classroom";
 axios.defaults.withCredentials = true;
 
-const API_SOCKET_URL = "http://localhost:5000";
+const API_SOCKET_URL = import.meta.env.MODE === "development" 
+  ? "http://localhost:5000" 
+  : "https://shiksha-sankalp.onrender.com";
 
 export const useAuthStore = create((set, get) => ({
 	user: null,
@@ -112,17 +114,35 @@ export const useAuthStore = create((set, get) => ({
 	connectSocket: () => {
 		const {user} = get();
 		if (!user || get().socket?.connected) return;
-		console.log(user);
+		console.log('Connecting socket for user:', user);
+		
 		const socket = io(API_SOCKET_URL, {
 			query: {
 				userId: user._id,
-			}
+			},
+			reconnection: true,
+			reconnectionAttempts: 5,
+			reconnectionDelay: 1000
 		});
+
+		socket.on('connect', () => {
+			console.log('Socket connected successfully');
+		});
+
+		socket.on('connect_error', (error) => {
+			console.error('Socket connection error:', error);
+		});
+
+		socket.on('disconnect', (reason) => {
+			console.log('Socket disconnected:', reason);
+		});
+
 		socket.connect();
 
 		set({ socket });
 
 		socket.on('getOnlineUsers', (userIds) => {
+			console.log('Online users updated:', userIds);
 			set({ onlineUsers: userIds });
 		});
 	},

@@ -1,4 +1,4 @@
-import RemoveClassroomModal from '@/modals/deleteClassroomModal copy/RemoveClassroomModal'
+import RemoveClassroomModal from '@/modals/RemoveClassroomModal'
 import React from 'react'
 
 const ConfirmRemove = () => {

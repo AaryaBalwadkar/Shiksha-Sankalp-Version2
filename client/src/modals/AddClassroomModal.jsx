@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useClassroomAndChannelStore } from "../store/ClassroomStore";
-import { useNavigate } from "react-router-dom";
 
 const AddClassroomModal = ({ onClose }) => {
   const [classroomName, setClassroomName] = useState("");
@@ -9,8 +8,8 @@ const AddClassroomModal = ({ onClose }) => {
   const [error, setError] = useState(null);
 
   const { addClassroom } = useClassroomAndChannelStore();
-  const navigate = useNavigate();
 
+  // Handle file change and preview generation
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
     if (validateFile(selectedFile)) {
@@ -20,6 +19,7 @@ const AddClassroomModal = ({ onClose }) => {
     }
   };
 
+  // Validate file type
   const validateFile = (file) => {
     if (file && file.type.startsWith("image/")) {
       setError(null);
@@ -30,6 +30,7 @@ const AddClassroomModal = ({ onClose }) => {
     }
   };
 
+  // Convert file to Base64
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -39,73 +40,90 @@ const AddClassroomModal = ({ onClose }) => {
     });
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  // Handle form submit
+  const onSubmit = async (event) => {
+    event.preventDefault();
+    setError(null);
     try {
       await addClassroom(classroomName, file);
-      onClose(); // Close the modal after success
-      navigate("/home");
-    } catch (err) {
-      console.log("Something went wrong: ", err.message);
+      // close modal after successful creation; parent can refresh list if needed
+      if (onClose) onClose();
+    } catch (error) {
+      console.log("Something went wrong: ", error.message || error);
+      setError(error.response?.data?.message || "Failed to create classroom");
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-[9999]">
-      <div className="bg-white w-full max-w-md rounded-xl shadow-2xl p-6 relative">
-        <h2 className="text-2xl font-semibold mb-4 text-center">Create Classroom</h2>
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80]"
+      onClick={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
+    >
+      <div className="relative w-[400px] min-h-[500px] bg-white rounded-xl shadow-2xl border border-white/50 border-r-white/20 border-b-white/20 backdrop-blur-sm flex overflow-hidden">
+        <div className="relative w-full p-6 flex flex-col items-center justify-center">
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">✕</button>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            Create Classroom
+          </h2>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="text-center">
-            <label
-              htmlFor="fileInput"
-              className="block w-full border-2 border-dashed border-purple-500 text-purple-600 rounded-lg p-4 cursor-pointer hover:bg-purple-50 transition"
-            >
-              {file ? "Image Selected" : "Click to Upload or Drag an Image"}
-              <input
-                type="file"
-                id="fileInput"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-            {preview && (
-              <div className="mt-4 flex justify-center">
-                <img
-                  src={preview}
-                  alt="Preview"
-                  className="max-w-[150px] rounded-md"
+          <form
+            className="flex flex-col items-center w-full space-y-5"
+            onSubmit={onSubmit}
+          >
+            {/* Upload Section */}
+            <div className="w-72 text-center">
+              <div
+                className="border-2 border-dashed border-violet-500 text-violet-500 rounded-lg p-6 mb-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
+                onClick={() => document.getElementById("fileInput").click()}
+              >
+                <input
+                  type="file"
+                  id="fileInput"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
+                <label htmlFor="fileInput" className="font-semibold cursor-pointer">
+                  {file ? "Image Selected" : "Drag & Drop or Click to Upload"}
+                </label>
               </div>
-            )}
-            {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
-          </div>
 
-          <input
-            type="text"
-            placeholder="Classroom Name"
-            className="w-full px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            value={classroomName}
-            onChange={(e) => setClassroomName(e.target.value)}
-          />
+              {error && (
+                <p className="text-red-500 text-sm font-semibold mt-1">{error}</p>
+              )}
 
-          <div className="flex justify-between gap-2">
-            <button
-              type="button"
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-full transition"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
+              {preview && (
+                <div className="flex justify-center mt-3">
+                  <img
+                    src={preview}
+                    alt="Preview"
+                    className="max-w-[60%] rounded-lg shadow-md"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Input for Classroom Name */}
+            <div className="w-full flex justify-center">
+              <input
+                type="text"
+                className="w-80 h-12 px-5 rounded-full shadow-md text-gray-700 text-base outline-none bg-gray-100 focus:ring-2 focus:ring-indigo-500 placeholder-gray-400"
+                placeholder="Classroom Name"
+                value={classroomName}
+                onChange={(e) => setClassroomName(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-full transition"
+              className="w-80 py-3 bg-[#21264d] text-white font-bold text-lg rounded-full transition-all duration-300 hover:scale-105 hover:opacity-80"
             >
-              Create
+              Create Classroom
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );

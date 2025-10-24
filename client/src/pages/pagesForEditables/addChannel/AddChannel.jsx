@@ -1,5 +1,5 @@
 
-import AddChannelModal from '@/modals/addChannelModal/AddChannelModal'
+import AddChannelModal from '@/modals/AddChannelModal'
 import React from 'react'
 
 const AddChannel = () => {

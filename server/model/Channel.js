@@ -27,3 +27,5 @@ const Channel = new mongoose.Schema(
 );
 
 export const channel = mongoose.model("Channel", Channel);
+
+export default channel;

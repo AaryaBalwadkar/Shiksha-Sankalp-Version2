@@ -1,5 +1,4 @@
 import React from "react";
-import "./Classrooms.css";
 import ClassroomsAction from "../FurtherActions/ClassroomsAction";
 import { Separator } from "../ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,9 +30,9 @@ const Classrooms = () => {
   }, []);
 
   return (
-    <div className="classroom-side-bar">
+    <div className="absolute w-[70px] bg-[#c4e3ff] h-[100vh]">
       <ClassroomsAction />
-      <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mt-2 mx-auto" />
+      <Separator className="h-[2px] bg-zinc-300 dark:bg-zinc-700 rounded-md w-10 mt-2 mb-2 mx-auto" />
       <ScrollArea className="flex-1 w-full overflow-auto h-[75vh]">
         {classrooms.map((classroom) => (
           <div key={classroom._id} className="mb-4">

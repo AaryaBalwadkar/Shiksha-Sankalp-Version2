@@ -1,15 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ActionTooltip } from '@/actions/TooltipAction'
 import { Plus } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/AuthStore'
+import AddChannelModal from '@/modals/AddChannelModal'
 
 const ChannelsAction = ({ classroomId }) => {
-  const navigate = useNavigate()
   const { user } = useAuthStore()
+  const [openAddChannelModal, setOpenAddChannelModal] = useState(false)
 
   const handlePlus = () => {
-    navigate(`/home/addChannel`, { state: { classroomId } });
+    setOpenAddChannelModal(true)
   }
   
   return (
@@ -38,8 +38,14 @@ const ChannelsAction = ({ classroomId }) => {
               />
             </div>
           )}
-        </button>
+          </button>
       </ActionTooltip>
+      {openAddChannelModal && (
+        <AddChannelModal
+          classroomId={classroomId}
+          onClose={() => setOpenAddChannelModal(false)}
+        />
+      )}
     </div>
   )
 }

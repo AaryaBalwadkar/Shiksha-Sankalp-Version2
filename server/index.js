@@ -9,7 +9,7 @@ import ClassroomAndChannelRoutes from './routes/ClassroomAndChennelRoutes.js'
 import AssignmentRoutes from './routes/AssignmentRoutes.js'
 import mongoose from 'mongoose'
 import cookieParser from 'cookie-parser'
-import { app, server } from './lib/socket.js'
+import { app, server } from './socket.js'
 
 dotenv.config()
 

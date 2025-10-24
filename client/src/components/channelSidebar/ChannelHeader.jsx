@@ -1,21 +1,18 @@
-import React from 'react'
-import { cn } from '@/lib/utils'
+import React, { useState } from 'react'
 import { Trash, Code } from 'lucide-react'
 import { Presentation } from 'lucide-react'
 import { useAuthStore } from '@/store/AuthStore'
 import { useNavigate } from 'react-router-dom'
 import { ActionTooltip } from '@/actions/TooltipAction'
+import DeleteClassroomModal from '@/modals/DeleteClassroomAndChannelModal'
 
 const ChannelHeader = ({ classroomId, code }) => {
   const { user } = useAuthStore()
   const navigate = useNavigate()
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
-  const handleDelete = async () => {
-    try {
-      navigate("/home/confirmdeletion", { state: { id: classroomId } })
-    } catch (error) {
-      console.log("Error in handling delete classroom")
-    }
+  const handleDelete = () => {
+    setShowDeleteModal(true)
   }
 
   const handleRemove = async () => {
@@ -28,6 +25,13 @@ const ChannelHeader = ({ classroomId, code }) => {
 
   return (
     <div>
+      {showDeleteModal && (
+        <DeleteClassroomModal
+          value="classroom"
+          id={classroomId}
+          onClose={() => setShowDeleteModal(false)}
+        />
+      )}
 
       {(user?.status === "institute") ? (
         <div className='flex items-center bg-blue-200/30 h-[6vh] pl-2 z-10 shadow-bottom-only'>
@@ -36,12 +40,12 @@ const ChannelHeader = ({ classroomId, code }) => {
               <Code />
             </div>
           </ActionTooltip>
-          <ActionTooltip side="right" align="center" label="Delete Classroom">
-            <div className='flex w-[33%] justify-center'>
+          <ActionTooltip side="right" align="center" label="Whiteboard">
+            <div className='flex h-[100%] w-[33%] items-center justify-center border-r-blue-200 border-r-2'>
               <Presentation />
             </div>
           </ActionTooltip>
-          <ActionTooltip side="right" align="center" label="Whiteboard">
+          <ActionTooltip side="right" align="center" label="Delete Classroom">
             <div className='flex h-[100%] w-[33%] items-center justify-center border-r-blue-200 border-r-2' onClick={handleDelete}>
               <Trash />
             </div>

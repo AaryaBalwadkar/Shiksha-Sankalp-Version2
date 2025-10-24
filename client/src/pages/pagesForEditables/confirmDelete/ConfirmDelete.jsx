@@ -1,4 +1,4 @@
-import DeleteClassroomModal from '@/modals/deleteClassroomModal/DeleteClassroomAndChannelModal.jsx'
+import DeleteClassroomModal from '@/modals/DeleteClassroomAndChannelModal.jsx'
 import React from 'react'
 
 const ConfirmDelete = () => {
